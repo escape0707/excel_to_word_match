@@ -41,10 +41,20 @@ for col in ws.iter_cols(
     for i, val in enumerate(col):
         row_no = i + 5
         if val:  # skip None
-            match = many_names_years_pattern.fullmatch(val)
-            if not match:
+            if not many_names_years_pattern.fullmatch(val):
                 print(row_no)
-                change_cell_font_color_to_red(row_no, col_no)
-                continue
-            # print(names_years_pattern.findall(val))
+                raise ValueError(val)
+            print(row_no, end=": ")
+            for names_years in names_years_pattern.findall(val):
+                names = names_pattern.fullmatch(names_years[0])[1].split(" and ")
+                years = year_pattern.findall(years_pattern.match(names_years[1])[1])
+                for i, name in enumerate(names):
+                    if " " in name:
+                        first, last = name.split()
+                        if str.isupper(first):
+                            first, last = last, first
+                        last = ".".join(filter(str.isalpha, last)) + "."
+                        names[i] = first + ", " + last
+                print(names, years, end=", ")
+            print()
 # wb.save("new_table2.xlsx")
