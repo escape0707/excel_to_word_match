@@ -1,18 +1,18 @@
+from copy import copy
 from itertools import filterfalse
 
 from openpyxl import load_workbook
-from openpyxl.styles import Font
-from openpyxl.styles import colors
-from copy import copy
+from openpyxl.styles import Font, colors
 
 from excel_match_pattern import (
     many_names_years_pattern,
-    names_years_pattern,
-    names_pattern,
-    years_pattern,
     name_pattern,
+    names_pattern,
+    names_years_pattern,
     year_pattern,
+    years_pattern,
 )
+from word import save, search_and_paint
 
 
 def parse_authors_and_years(authors_years_group):
@@ -44,7 +44,7 @@ for col in ws.iter_cols(
             if not many_names_years_pattern.fullmatch(val):
                 print(row_no)
                 raise ValueError(val)
-            print(row_no, end=": ")
+            # print(row_no, end=": ")
             for names_years in names_years_pattern.findall(val):
                 names = names_pattern.fullmatch(names_years[0])[1].split(" and ")
                 years = year_pattern.findall(years_pattern.match(names_years[1])[1])
@@ -55,6 +55,20 @@ for col in ws.iter_cols(
                             first, last = last, first
                         last = ".".join(filter(str.isalpha, last)) + "."
                         names[i] = first + ", " + last
-                print(names, years, end=", ")
-            print()
+                years_expanded = []
+                for year in years:
+                    if ", " in year:
+                        years_expanded.extend(
+                            year[:4] + c for c in year[4:].split(", ")
+                        )
+                    else:
+                        years_expanded.append(year)
+                years = years_expanded
+                # print(names, years, end=", ")
+                if not search_and_paint(names, years):
+                    print(row_no)
+                    # change_cell_font_color_to_red(row_no, col_no)
+            # print()
+
+save()
 # wb.save("new_table2.xlsx")
